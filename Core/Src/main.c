@@ -75,7 +75,11 @@ void Task_UART(void);
 DHT22_HandleTypeDef dht;
 DHT22_Data_t dht_data;
 
-uint32_t adc_val = 0, t1_in, t1_out, t2_in, t2_out, t3_in, t3_out, t4_in, t4_out;
+uint8_t rx_byte;
+uint8_t rx_buffer[50];
+uint8_t rx_index = 0;
+uint32_t adc_val = 0, t1_in, t1_out, t2_in, t2_out, t3_in, t3_out, t4_in, t4_out, t5_in, t5_out;
+volatile uint32_t P = 2000;
 float temp=0, hum=0;
 char str_buff[50];
 /* USER CODE END 0 */
@@ -123,25 +127,25 @@ int main(void)
   HAL_ADCEx_Calibration_Start(&hadc1);
 
   HAL_DBGMCU_EnableDBGSleepMode();
+  HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int P=10000, last_time=HAL_GetTick();
+  int t0 = HAL_GetTick();
   while (1)
   {
-	  if (HAL_GetTick() - last_time >= 3000)
+	  if (HAL_GetTick() % P ==t0)
 	  {
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	      last_time = HAL_GetTick();
 	      Task_ADC();
 	      Task_DHT();
 	      Task_LCD();
 	      Task_UART();
-	  	}
+	  }
 	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-	  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	  //HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -407,9 +411,11 @@ void Task_ADC(void)
         adc_val = HAL_ADC_GetValue(&hadc1);
     }
     HAL_ADC_Stop(&hadc1);
-    hum = (float)(adc_val - ADC_DRY) * (100 - 0) / (ADC_WET - ADC_DRY);
-    if (hum >100) hum = 100;
-    if(hum<0) hum = 0;
+	float tu_so = (float)adc_val - (float)ADC_DRY;
+	float mau_so = (float)ADC_WET - (float)ADC_DRY;
+	hum = (tu_so / mau_so) * 100.0f;
+	if (hum > 100.0f) hum = 100.0f;
+	if (hum < 0.0f) hum = 0.0f;
     t1_out = HAL_GetTick();
 }
 
@@ -419,7 +425,7 @@ void Task_DHT(void)
     if (DHT22_Read(&dht, &dht_data) == 0)
     {
         temp = dht_data.Temperature;
-        // hum = dht_data.Humidity; // Bỏ qua độ ẩm theo yêu cầu
+        // hum = dht_data.Humidity;
     }
     t2_out = HAL_GetTick();
 }
@@ -448,6 +454,32 @@ void Task_UART(void)
     HAL_UART_Transmit(&huart1, (uint8_t*)str_buff, strlen(str_buff), 100);
 
     t4_out = HAL_GetTick();
+}
+
+// Hàm xử lý ngắt UART
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART1)
+	{
+		if (rx_byte == '\n')
+		{
+			rx_buffer[rx_index] = '\0';
+			rx_index = 0;
+			if (strstr((char*)rx_buffer, "SET_PERIOD:") != NULL)
+				{
+					 int New_P;
+					 if(sscanf((char*) rx_buffer, "SET_PERIOD:%d", &New_P) == 1)
+					 {
+						 P = (uint16_t)New_P;
+					 }
+				}
+		}
+		else if (rx_index < 49) {
+			rx_buffer[rx_index++] = rx_byte;
+		}
+		HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+	}
+
 }
 /* USER CODE END 4 */
 

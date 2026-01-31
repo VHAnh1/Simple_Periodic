@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Single_Period
+BUILD_ARTIFACT_NAME := Simple_Periodic
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Single_Period.elf \
+Simple_Periodic.elf \
 
 MAP_FILES += \
-Single_Period.map \
+Simple_Periodic.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Single_Period.list \
+Simple_Periodic.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Single_Period.elf secondary-outputs
+main-build: Simple_Periodic.elf secondary-outputs
 
 # Tool invocations
-Single_Period.elf Single_Period.map: $(OBJS) $(USER_OBJS) D:\TAI\ LIEU\ HOC\STM32\Single_Period\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Single_Period.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\TAI LIEU HOC\STM32\Single_Period\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Single_Period.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Simple_Periodic.elf Simple_Periodic.map: $(OBJS) $(USER_OBJS) D:\TAI\ LIEU\ HOC\STM32\Simple_Periodic\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Simple_Periodic.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\TAI LIEU HOC\STM32\Simple_Periodic\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Simple_Periodic.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Single_Period.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Single_Period.list"
+Simple_Periodic.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Simple_Periodic.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Single_Period.elf Single_Period.list Single_Period.map default.size.stdout
+	-$(RM) Simple_Periodic.elf Simple_Periodic.list Simple_Periodic.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
